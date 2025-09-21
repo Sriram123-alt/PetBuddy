@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PetBuddy - Admin Dashboard</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/">🐾 PetBuddy Admin</a>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <h1 class="mb-4 text-center">Admin Dashboard</h1>
+
+    <div class="row g-4">
+      <!-- Create Service -->
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header bg-primary text-white">
+            <h2 class="h5 mb-0">Create Service</h2>
+          </div>
+          <div class="card-body">
+            <form id="sform">
+              <div class="mb-3">
+                <label class="form-label">Title</label>
+                <input class="form-control" name="title" placeholder="Service title" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Category</label>
+                <input class="form-control" name="category" placeholder="Category">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Price</label>
+                <input class="form-control" name="price" placeholder="Price" type="number">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Image URL</label>
+                <input class="form-control" name="imageUrl" placeholder="Image URL">
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="description" placeholder="Description"></textarea>
+              </div>
+              <button class="btn btn-success w-100">Create</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bookings Section -->
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h2 class="h5 mb-0">All Bookings</h2>
+            <button id="loadB" class="btn btn-light btn-sm">Load Bookings</button>
+          </div>
+          <div class="card-body" id="bookings">
+            <p class="text-muted">Click "Load Bookings" to view customer reservations.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-light py-3 mt-5">
+    <div class="container text-center">
+      <p class="mb-0">&copy; 2025 PetBuddy. Admin Panel</p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Existing Script -->
+  <script>
+    function authHeader(){ 
+      const t=localStorage.getItem('token'); 
+      return t ? {'Authorization':'Bearer '+t} : {};
+    };
+
+    document.getElementById('sform').addEventListener('submit', async e=>{
+      e.preventDefault(); 
+      const data=Object.fromEntries(new FormData(e.target).entries());
+      const r=await fetch('/api/services',{
+        method:'POST',
+        headers:Object.assign({'Content-Type':'application/json'}, authHeader()),
+        body:JSON.stringify({
+          title:data.title,
+          category:data.category,
+          price:Number(data.price),
+          imageUrl:data.imageUrl,
+          description:data.description
+        })
+      });
+      if(r.ok){ 
+        alert('Created'); 
+        location.reload(); 
+      } else { 
+        alert('Error'); 
+      }
+    });
+
+    document.getElementById('loadB').addEventListener('click', async ()=>{
+      const r=await fetch('/api/bookings',{headers:authHeader()}); 
+      const j=await r.json();
+      if(r.ok){
+        document.getElementById('bookings').innerHTML = j.map(b=>`
+          <div class="border rounded p-3 mb-2 bg-light">
+            <b>${b.userName}</b> (${b.userEmail})<br/>
+            <strong>Service:</strong> ${b.service?.title || b.service}<br/>
+            <strong>Date:</strong> ${b.date}
+          </div>
+        `).join('');
+      } else {
+        alert('Auth required');
+      }
+    });
+  </script>
+</body>
+</html>

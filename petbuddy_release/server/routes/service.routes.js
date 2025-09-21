@@ -1,0 +1,10 @@
+import express from 'express';
+import { createService, getServices, getServiceById, updateService, deleteService } from '../controllers/service.controller.js';
+import { protect, adminOnly } from '../middleware/auth.middleware.js';
+const router = express.Router();
+router.get('/', getServices);
+router.post('/', protect, adminOnly, createService);
+router.get('/:id', getServiceById);
+router.put('/:id', protect, adminOnly, updateService);
+router.delete('/:id', protect, adminOnly, deleteService);
+export default router;

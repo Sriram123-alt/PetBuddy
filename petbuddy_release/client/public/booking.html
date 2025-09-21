@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>PetBuddy - Booking</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrPtJn04lzbef8wSNrebot4wOUe6JG18lCsQ&s') 
+                  no-repeat center center fixed;
+      background-size: cover;
+      color: rgb(10, 10, 10);
+    }
+    .navbar {
+      background: transparent !important;
+    }
+    .booking-card {
+      max-width: 650px;
+      margin: 80px auto;
+      padding: 25px;
+      background: rgba(213, 209, 209, 0.3);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.3);
+      color: rgb(245, 241, 241);
+    }
+    .form-control, .form-select, textarea {
+      background: rgba(255, 255, 255, 0.2) !important;
+      color: rgb(7, 7, 7);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+    .form-control::placeholder, textarea::placeholder {
+      color: rgba(12, 12, 12, 0.8);
+    }
+    label {
+      font-weight: bold;
+    }
+    .btn-primary {
+      background: rgba(0,123,255,0.8);
+      border: none;
+    }
+    .btn-primary:hover {
+      background: rgba(0,123,255,1);
+    }
+  </style>
+</head>
+<body>
+  <script src="navbar.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => loadNavbar({ protectedPage: true }));
+  </script>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+      <a class="navbar-brand fw-bold text-white" href="index.html">🐾 PetBuddy</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link text-white" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link text-white" href="service.html">Services</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Booking Form -->
+  <div class="container">
+    <div class="booking-card">
+      <h2 class="text-center mb-4">📅 Book a Service</h2>
+      <form id="f">
+        <!-- Name -->
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input name="name" class="form-control" placeholder="Enter your name" required>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+        </div>
+
+        <!-- Address -->
+        <div class="mb-3">
+          <label class="form-label">Address</label>
+          <textarea name="address" class="form-control" placeholder="Enter your address" required></textarea>
+        </div>
+
+        <!-- Service -->
+        <div class="mb-3">
+          <label class="form-label">Service</label>
+          <select name="service" id="serviceSel" class="form-select"></select>
+        </div>
+
+        <!-- Date -->
+        <div class="mb-3">
+          <label class="form-label">Date</label>
+          <input name="date" type="date" class="form-control" required>
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-3">
+          <label class="form-label">Notes</label>
+          <textarea name="notes" class="form-control" placeholder="Add extra details..."></textarea>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="mb-3">
+          <label class="form-label">Payment Method</label>
+          <select name="paymentMethod" class="form-select" required>
+            <option value="">-- Select Payment Method --</option>
+            <option value="Cash">Cash</option>
+            <option value="Card">Credit/Debit Card</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn btn-primary w-100">Book</button>
+      </form>
+      <div id="msg" class="mt-3 text-center"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    async function loadServices(){
+      const r = await fetch('/api/services');
+      const list = await r.json();
+      const sel = document.getElementById('serviceSel');
+      const params = new URLSearchParams(location.search);
+      const pre = params.get('service');
+      list.forEach(s=>{
+        const o = document.createElement('option');
+        o.value = s._id;
+        o.textContent = s.title;
+        if(s._id === pre) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+
+    document.getElementById('f').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target).entries());
+
+      const res = await fetch('/api/bookings', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          userName: data.name,
+          userEmail: data.email,
+          address: data.address,
+          service: data.service,
+          date: data.date,
+          notes: data.notes,
+          paymentMethod: data.paymentMethod
+        })
+      });
+
+      if(res.ok){
+        // Save booking details in localStorage
+        localStorage.setItem("lastBooking", JSON.stringify({
+          name: data.name,
+          email: data.email,
+          address: data.address,
+          service: document.querySelector("#serviceSel option:checked").textContent,
+          date: data.date,
+          notes: data.notes,
+          paymentMethod: data.paymentMethod
+        }));
+
+        // Redirect to bill page
+        window.location.href = "bill.html";
+      } else {
+        document.getElementById('msg').innerHTML = `<div class="alert alert-danger">Booking failed. Please try again.</div>`;
+      }
+    });
+
+    loadServices();
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

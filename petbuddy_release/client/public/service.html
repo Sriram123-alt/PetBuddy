@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PetBuddy - Services</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT30xoY3KBBNbYu36XMEDJFrKq_v4EgPmqxJg&s') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      padding-top: 80px;
+    }
+    .card { background: rgba(0,0,0,0.6); color: white; }
+  </style>
+</head>
+<body>
+  <script src="navbar.js"></script>
+<script>
+  window.addEventListener("DOMContentLoaded", () => loadNavbar({ protectedPage: true }));
+</script>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">🐾 PetBuddy</a>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto" id="nav-links">
+          <li class="nav-item"><a href="index.html" class="btn btn-light ms-2">Home</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container text-center my-5">
+    <h1>Our Services</h1>
+    <div class="row mt-4" id="serviceList"></div>
+  </div>
+
+  <script>
+    async function loadServices() {
+      const r = await fetch('/api/services');
+      const list = await r.json();
+      const container = document.getElementById("serviceList");
+      container.innerHTML = list.map(s => `
+        <div class="col-md-4 mb-4">
+          <div class="card p-3">
+            <h3>${s.title}</h3>
+            <p>${s.description || ''}</p>
+            <p><strong>Price:</strong> $${s.price}</p>
+            <a href="booking.html?service=${s._id}" class="btn btn-light">Book Now</a>
+          </div>
+        </div>
+      `).join('');
+    }
+    loadServices();
+  </script>
+
+  <script>
+    // Reusable navbar
+    async function loadNavbar() {
+      const token = localStorage.getItem("token");
+      const navLinks = document.getElementById("nav-links");
+      if (!token) {
+        navLinks.innerHTML = `
+          <li class="nav-item"><a class="nav-link" href="index.html">HOME</a></li>
+          <li class="nav-item"><a class="nav-link" href="booking.html">Booking</a></li>
+        
+        `;
+        return;
+      }
+      const res = await fetch("/api/auth/me", { headers: { "Authorization": "Bearer " + token }});
+      const user = await res.json();
+      if (res.ok) {
+        navLinks.innerHTML = `
+        
+            <a class="btn btn-light dropdown-toggle ms-2" data-bs-toggle="dropdown">👤 ${user.name}</a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><span class="dropdown-item-text"><strong>Email:</strong> ${user.email}</span></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+          </li>
+        `;
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+          localStorage.removeItem("token");
+          location.href = "index.html";
+        });
+      }
+    }
+    loadNavbar();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
