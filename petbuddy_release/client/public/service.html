@@ -12,85 +12,108 @@
       color: white;
       padding-top: 80px;
     }
-    .card { background: rgba(0,0,0,0.6); color: white; }
+
+    .card {
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      color: white;
+      height: 300px; /* full container height */
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center; /* vertically center content */
+      align-items: center;     /* horizontally center content */
+      text-align: center;
+      padding: 15px;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5); /* overlay for readability */
+      z-index: 0;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%; /* fill full card height */
+    }
+
+    .card-content h5, .card-content p {
+      margin: 5px 0;
+    }
+
+    .card-content a.btn {
+      margin-top: 10px;
+    }
+
+    @media (max-width: 767px) {
+      .card {
+        height: 220px; /* mobile height */
+      }
+    }
+    .dropdown-menu-end {
+      right: 0;
+      left: auto;
+    }
   </style>
 </head>
 <body>
-  <script src="navbar.js"></script>
-<script>
-  window.addEventListener("DOMContentLoaded", () => loadNavbar({ protectedPage: true }));
-</script>
 
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html">🐾 PetBuddy</a>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto" id="nav-links">
-          <li class="nav-item"><a href="index.html" class="btn btn-light ms-2">Home</a></li>
+  <!-- Navbar placeholder -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html">🐾 PetBuddy</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon">
+      </span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link text-white" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link text-white" href="booking.html">Booking</a></li>
         </ul>
       </div>
-    </div>
-  </nav>
+  </div>
+</nav>
+
+ 
 
   <div class="container text-center my-5">
     <h1>Our Services</h1>
     <div class="row mt-4" id="serviceList"></div>
   </div>
 
-  <script>
+    // Load services
+    <script>
     async function loadServices() {
       const r = await fetch('/api/services');
       const list = await r.json();
       const container = document.getElementById("serviceList");
       container.innerHTML = list.map(s => `
-        <div class="col-md-4 mb-4">
-          <div class="card p-3">
-            <h3>${s.title}</h3>
-            <p>${s.description || ''}</p>
-            <p><strong>Price:</strong> $${s.price}</p>
-            <a href="booking.html?service=${s._id}" class="btn btn-light">Book Now</a>
+        <div class="col-md-6 mb-4">
+          <div class="card" style="background-image: url('${s.imageUrl || 'https://via.placeholder.com/300x300'}')">
+            <div class="card-content">
+              <h5>${s.title}</h5>
+              <p>${s.description || ''}</p>
+              <p><strong>Price:</strong> ₹${s.price}</p>
+              <a href="booking.html?service=${s._id}" class="btn btn-light btn-sm">Book Now</a>
+            </div>
           </div>
         </div>
       `).join('');
     }
+
     loadServices();
   </script>
 
-  <script>
-    // Reusable navbar
-    async function loadNavbar() {
-      const token = localStorage.getItem("token");
-      const navLinks = document.getElementById("nav-links");
-      if (!token) {
-        navLinks.innerHTML = `
-          <li class="nav-item"><a class="nav-link" href="index.html">HOME</a></li>
-          <li class="nav-item"><a class="nav-link" href="booking.html">Booking</a></li>
-        
-        `;
-        return;
-      }
-      const res = await fetch("/api/auth/me", { headers: { "Authorization": "Bearer " + token }});
-      const user = await res.json();
-      if (res.ok) {
-        navLinks.innerHTML = `
-        
-            <a class="btn btn-light dropdown-toggle ms-2" data-bs-toggle="dropdown">👤 ${user.name}</a>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li><span class="dropdown-item-text"><strong>Email:</strong> ${user.email}</span></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
-            </ul>
-          </li>
-        `;
-        document.getElementById("logoutBtn").addEventListener("click", () => {
-          localStorage.removeItem("token");
-          location.href = "index.html";
-        });
-      }
-    }
-    loadNavbar();
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

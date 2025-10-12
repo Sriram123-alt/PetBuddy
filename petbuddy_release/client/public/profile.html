@@ -1,0 +1,49 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>PetBuddy</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"></head><body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="index.html">PetBuddy</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="services.html">Services</a></li>
+        <li class="nav-item"><a class="nav-link" href="booking.html">Booking</a></li>
+        <li class="nav-item"><a class="nav-link" href="bill.html">Bill</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0" id="nav-user">
+        <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+        <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<script>
+function getUser(){ try{ return JSON.parse(localStorage.getItem('petbuddyUser')||'null'); }catch(e){return null;} }
+function setUser(u){ localStorage.setItem('petbuddyUser', JSON.stringify(u)); updateNav(); }
+function clearUser(){ localStorage.removeItem('petbuddyUser'); updateNav(); }
+function updateNav(){ var user=getUser(); var c=document.getElementById('nav-user'); if(!c) return; if(user){ c.innerHTML = `<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href='#' id='userMenu' data-bs-toggle='dropdown'> <i class='bi bi-person-circle'></i> ${user.name||user.email}</a><ul class='dropdown-menu dropdown-menu-end'><li><a class='dropdown-item' href='profile.html'>Profile</a></li><li><a class='dropdown-item' href='booking.html'>My Bookings</a></li><li><hr class='dropdown-divider'></li><li><a class='dropdown-item' href='#' id='logoutBtn'>Logout</a></li></ul></li>`; var lb = document.getElementById('logoutBtn'); if(lb){ lb.addEventListener('click', function(e){ e.preventDefault(); clearUser(); window.location='index.html'; }); } } else { c.innerHTML = `<li class='nav-item'><a class='nav-link' href='login.html'>Login</a></li><li class='nav-item'><a class='nav-link' href='register.html'>Register</a></li>`; } }
+document.addEventListener('DOMContentLoaded', updateNav);
+</script>
+
+<main class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm p-4">
+        <h3>Your Profile</h3>
+        <div id="profileContent"></div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="bg-dark text-light py-4 mt-5"><div class="container d-flex flex-column flex-md-row justify-content-between align-items-center"><div>&copy; 2025 PetBuddy — Made with ❤️ for pets</div><div><a class="link-light me-3" href="index.html">Home</a><a class="link-light me-3" href="services.html">Services</a><a class="link-light" href="booking.html">Booking</a></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script></body></html>
+<script>
+function renderProfile(){
+  const u = JSON.parse(localStorage.getItem('petbuddyUser')||'null');
+  const c = document.getElementById('profileContent');
+  if(!u){ c.innerHTML = '<div class="alert alert-warning">Not logged in. <a href="login.html">Login</a></div>'; return; }
+  c.innerHTML = '<p><strong>Name:</strong> '+u.name+'</p><p><strong>Email:</strong> '+u.email+'</p>';
+}
+document.addEventListener('DOMContentLoaded', renderProfile);
+</script>
