@@ -163,7 +163,7 @@
     if (!booking) {
       alert("No booking found! Please make a booking first.");
     } else {
-      const pricePerService = servicePrices[booking.service] || 50;
+      const pricePerService = servicePrices[booking.service] ;
       const quantity = booking.quantity ? parseInt(booking.quantity) : 1;
       const total = (pricePerService * quantity).toFixed(2);
 
