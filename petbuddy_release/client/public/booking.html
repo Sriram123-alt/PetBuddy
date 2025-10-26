@@ -98,6 +98,12 @@
           <select name="service" id="serviceSel" class="form-select"></select>
         </div>
 
+        <!-- Service Price -->
+        <div class="mb-3">
+          <label class="form-label">Service Amount (₹)</label>
+          <input type="number" id="amount" name="amount" class="form-control" readonly>
+        </div>
+
         <!-- Date -->
         <div class="mb-3">
           <label class="form-label">Date</label>
@@ -130,28 +136,48 @@
 
   <!-- Scripts -->
   <script>
-    async function loadServices(){
+    async function loadServices() {
       const r = await fetch('/api/services');
       const list = await r.json();
       const sel = document.getElementById('serviceSel');
+
+      // Get service from URL if passed
       const params = new URLSearchParams(location.search);
       const pre = params.get('service');
-      list.forEach(s=>{
+      const preTitle = params.get('title');
+      const preAmount = params.get('amount');
+
+      list.forEach(s => {
         const o = document.createElement('option');
         o.value = s._id;
         o.textContent = s.title;
-        if(s._id === pre) o.selected = true;
+        if (s._id === pre || s.title === preTitle) o.selected = true;
         sel.appendChild(o);
+      });
+
+      // If amount is passed from services.html
+      if (preAmount) {
+        document.getElementById('amount').value = preAmount;
+      } else {
+        // Default to selected service's price (if available in list)
+        const selected = list.find(x => x._id === pre || x.title === preTitle);
+        if (selected) document.getElementById('amount').value = selected.price || '';
+      }
+
+      // Update amount dynamically if user switches service
+      sel.addEventListener('change', () => {
+        const selected = list.find(x => x._id === sel.value);
+        document.getElementById('amount').value = selected ? selected.price : '';
       });
     }
 
-    document.getElementById('f').addEventListener('submit', async (e)=>{
+    document.getElementById('f').addEventListener('submit', async (e) => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(e.target).entries());
 
       const res = await fetch('/api/bookings', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userName: data.name,
           userEmail: data.email,
@@ -159,23 +185,24 @@
           service: data.service,
           date: data.date,
           notes: data.notes,
-          paymentMethod: data.paymentMethod
+          paymentMethod: data.paymentMethod,
+          amount: data.amount
         })
       });
 
-      if(res.ok){
-        // Save booking details in localStorage
+      if (res.ok) {
+        // Save booking details for bill
         localStorage.setItem("lastBooking", JSON.stringify({
           name: data.name,
           email: data.email,
           address: data.address,
           service: document.querySelector("#serviceSel option:checked").textContent,
           date: data.date,
+          amount: data.amount,
           notes: data.notes,
           paymentMethod: data.paymentMethod
         }));
 
-        // Redirect to bill page
         window.location.href = "bill.html";
       } else {
         document.getElementById('msg').innerHTML = `<div class="alert alert-danger">Booking failed. Please try again.</div>`;

@@ -25,13 +25,8 @@
       color: #000;
       transition: transform 0.2s ease;
     }
-    .bill-card:hover {
-      transform: scale(1.01);
-    }
-    h2 {
-      color: #003366;
-      font-weight: bold;
-    }
+    .bill-card:hover { transform: scale(1.01); }
+    h2 { color: #003366; font-weight: bold; }
     .section-title {
       font-weight: bold;
       margin-top: 20px;
@@ -55,9 +50,7 @@
       text-align: center;
       color: #333;
     }
-    .company-info p {
-      margin: 2px 0;
-    }
+    .company-info p { margin: 2px 0; }
     .navbar {
       background-color: #0d6efd !important;
       box-shadow: none;
@@ -69,16 +62,11 @@
       align-items: center;
       gap: 5px;
     }
-    .navbar .navbar-brand:hover {
-      color: #eaeaea !important;
-    }
     .navbar-nav .nav-link {
       color: #dcdcdc !important;
       font-weight: 500;
     }
-    .navbar-nav .nav-link:hover {
-      color: #fff !important;
-    }
+    .navbar-nav .nav-link:hover { color: #fff !important; }
     #downloadBtn {
       background-color: #0d6efd;
       border: none;
@@ -89,7 +77,7 @@
   </style>
 </head>
 <body>
- 
+
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container">
@@ -128,7 +116,6 @@
       <div>
         <h5 class="section-title">📋 Booking Details</h5>
         <p><strong>Service:</strong> <span id="service"></span></p>
-        <p><strong>Quantity:</strong> <span id="quantity"></span></p>
         <p><strong>Date:</strong> <span id="date"></span></p>
         <p><strong>Notes:</strong> <span id="notes"></span></p>
         <p><strong>Payment Method:</strong> <span id="payment"></span></p>
@@ -136,7 +123,7 @@
 
       <!-- Total -->
       <div class="total-box">
-        💲 Total: <span id="total"></span> USD
+        💰 Total: ₹<span id="total"></span>
       </div>
 
       <!-- Company Info -->
@@ -157,22 +144,19 @@
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    const servicePrices = { "Grooming": 40, "Vet Care": 60, "Boarding": 80 };
     const booking = JSON.parse(localStorage.getItem("lastBooking"));
 
     if (!booking) {
       alert("No booking found! Please make a booking first.");
+      window.location.href = "booking.html";
     } else {
-      const pricePerService = servicePrices[booking.service] ;
-      const quantity = booking.quantity ? parseInt(booking.quantity) : 1;
-      const total = (pricePerService * quantity).toFixed(2);
+      const total = parseFloat(booking.amount || 0).toFixed(2);
 
-      // Fill in fields
+      // Fill fields
       document.getElementById("custName").textContent = booking.name;
       document.getElementById("custEmail").textContent = booking.email;
       document.getElementById("custAddress").textContent = booking.address || "Not provided";
       document.getElementById("service").textContent = booking.service;
-      document.getElementById("quantity").textContent = quantity;
       document.getElementById("date").textContent = booking.date;
       document.getElementById("notes").textContent = booking.notes || "None";
       document.getElementById("payment").textContent = booking.paymentMethod || "Not selected";
@@ -212,16 +196,15 @@
           doc.setFontSize(14).setTextColor(0, 51, 102).text("Booking Details", 20, 98);
           doc.setFontSize(12).setTextColor(0, 0, 0);
           doc.text(`Service: ${booking.service}`, 20, 108);
-          doc.text(`Quantity: ${quantity}`, 20, 116);
-          doc.text(`Date: ${booking.date}`, 20, 124);
-          doc.text(`Notes: ${booking.notes || "None"}`, 20, 132);
-          doc.text(`Payment Method: ${booking.paymentMethod || "Not selected"}`, 20, 140);
+          doc.text(`Date: ${booking.date}`, 20, 116);
+          doc.text(`Notes: ${booking.notes || "None"}`, 20, 124);
+          doc.text(`Payment Method: ${booking.paymentMethod || "Not selected"}`, 20, 132);
 
           // Total Section
           doc.setFillColor(255, 245, 230);
           doc.roundedRect(15, 170, 180, 25, 3, 3, "F");
           doc.setFontSize(16).setTextColor(153, 51, 0);
-          doc.text(`Total: $${total}`, 105, 186, { align: "center" });
+          doc.text(`Total: ₹${total}`, 105, 186, { align: "center" });
 
           // Date/time + Company Info
           const now = new Date().toLocaleString();
@@ -233,9 +216,8 @@
           doc.text("123 Pet Street, HappyTown, USA", 105, 230, { align: "center" });
           doc.text("Email: support@petbuddy.com | Phone: +1 (555) 123-4567", 105, 238, { align: "center" });
           doc.text("Website: www.petbuddy.com", 105, 246, { align: "center" });
-
-          doc.setFontSize(10).setTextColor(120, 120, 120);
           doc.text("© 2025 PetBuddy | Thank you for trusting us 🐾", 105, 290, { align: "center" });
+
           doc.save("PetBuddy_Bill.pdf");
         };
       });
