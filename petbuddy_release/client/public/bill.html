@@ -5,6 +5,7 @@
   <title>PetBuddy - Bill</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
     body {
@@ -12,7 +13,7 @@
       background-size: cover;
       font-family: 'Arial', sans-serif;
       color: #000;
-      padding-top: 70px; /* push content below fixed navbar */
+      padding-top: 70px;
     }
     .bill-card {
       max-width: 700px;
@@ -22,6 +23,10 @@
       background: rgba(201, 194, 194, 0.95);
       box-shadow: 0 8px 20px rgba(0,0,0,0.2);
       color: #000;
+      transition: transform 0.2s ease;
+    }
+    .bill-card:hover {
+      transform: scale(1.01);
     }
     h2 {
       color: #003366;
@@ -53,8 +58,6 @@
     .company-info p {
       margin: 2px 0;
     }
-
-    /* 🔹 Navbar Styling like screenshot */
     .navbar {
       background-color: #0d6efd !important;
       box-shadow: none;
@@ -76,8 +79,6 @@
     .navbar-nav .nav-link:hover {
       color: #fff !important;
     }
-
-    /* 🔹 Match download button to navbar */
     #downloadBtn {
       background-color: #0d6efd;
       border: none;
@@ -94,7 +95,7 @@
     <div class="container">
       <a class="navbar-brand" href="index.html">🐾 PetBuddy</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
+        <i class="bi bi-list text-white fs-1"></i>
       </button>
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav">
@@ -127,6 +128,7 @@
       <div>
         <h5 class="section-title">📋 Booking Details</h5>
         <p><strong>Service:</strong> <span id="service"></span></p>
+        <p><strong>Quantity:</strong> <span id="quantity"></span></p>
         <p><strong>Date:</strong> <span id="date"></span></p>
         <p><strong>Notes:</strong> <span id="notes"></span></p>
         <p><strong>Payment Method:</strong> <span id="payment"></span></p>
@@ -146,7 +148,8 @@
       </div>
 
       <div class="text-center mt-4">
-        <button id="downloadBtn" class="btn btn-primary">⬇ Download PDF</button>
+        <button id="downloadBtn" class="btn btn-primary">⬇ Download PDF</button><br>
+        <a href="booking.html" class="btn btn-outline-primary mt-2">← Back to Booking</a>
       </div>
     </div>
   </div>
@@ -156,81 +159,87 @@
   <script>
     const servicePrices = { "Grooming": 40, "Vet Care": 60, "Boarding": 80 };
     const booking = JSON.parse(localStorage.getItem("lastBooking"));
-    let total = 50;
 
-    if (booking) {
+    if (!booking) {
+      alert("No booking found! Please make a booking first.");
+    } else {
+      const pricePerService = servicePrices[booking.service] || 50;
+      const quantity = booking.quantity ? parseInt(booking.quantity) : 1;
+      const total = (pricePerService * quantity).toFixed(2);
+
+      // Fill in fields
       document.getElementById("custName").textContent = booking.name;
       document.getElementById("custEmail").textContent = booking.email;
       document.getElementById("custAddress").textContent = booking.address || "Not provided";
       document.getElementById("service").textContent = booking.service;
+      document.getElementById("quantity").textContent = quantity;
       document.getElementById("date").textContent = booking.date;
       document.getElementById("notes").textContent = booking.notes || "None";
       document.getElementById("payment").textContent = booking.paymentMethod || "Not selected";
-      total = servicePrices[booking.service] || 50;
       document.getElementById("total").textContent = total;
+
+      // PDF download logic
+      document.getElementById("downloadBtn").addEventListener("click", () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        doc.setFillColor(245, 245, 245);
+        doc.rect(0, 0, 210, 297, "F");
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = "https://cdn-icons-png.flaticon.com/512/616/616408.png";
+
+        img.onload = function () {
+          doc.addImage(img, "PNG", 15, 10, 25, 25);
+          doc.setFontSize(22).setTextColor(0, 51, 102);
+          doc.text("PetBuddy Receipt", 105, 20, { align: "center" });
+          doc.setFontSize(12).setTextColor(80, 80, 80);
+          doc.text("Caring for your pets with ❤️", 105, 28, { align: "center" });
+
+          // Customer Section
+          doc.setFillColor(230, 240, 255);
+          doc.roundedRect(15, 40, 180, 40, 3, 3, "F");
+          doc.setFontSize(14).setTextColor(0, 51, 102).text("Customer Details", 20, 48);
+          doc.setFontSize(12).setTextColor(0, 0, 0);
+          doc.text(`Name: ${booking.name}`, 20, 58);
+          doc.text(`Email: ${booking.email}`, 20, 66);
+          doc.text(`Address: ${booking.address || "Not provided"}`, 20, 74);
+
+          // Booking Section
+          doc.setFillColor(240, 255, 240);
+          doc.roundedRect(15, 90, 180, 70, 3, 3, "F");
+          doc.setFontSize(14).setTextColor(0, 51, 102).text("Booking Details", 20, 98);
+          doc.setFontSize(12).setTextColor(0, 0, 0);
+          doc.text(`Service: ${booking.service}`, 20, 108);
+          doc.text(`Quantity: ${quantity}`, 20, 116);
+          doc.text(`Date: ${booking.date}`, 20, 124);
+          doc.text(`Notes: ${booking.notes || "None"}`, 20, 132);
+          doc.text(`Payment Method: ${booking.paymentMethod || "Not selected"}`, 20, 140);
+
+          // Total Section
+          doc.setFillColor(255, 245, 230);
+          doc.roundedRect(15, 170, 180, 25, 3, 3, "F");
+          doc.setFontSize(16).setTextColor(153, 51, 0);
+          doc.text(`Total: $${total}`, 105, 186, { align: "center" });
+
+          // Date/time + Company Info
+          const now = new Date().toLocaleString();
+          doc.setFontSize(10).setTextColor(100, 100, 100);
+          doc.text(`Generated on: ${now}`, 15, 205);
+          doc.setFontSize(12).setTextColor(0, 51, 102);
+          doc.text("PetBuddy Contact", 105, 220, { align: "center" });
+          doc.setFontSize(10).setTextColor(0, 0, 0);
+          doc.text("123 Pet Street, HappyTown, USA", 105, 230, { align: "center" });
+          doc.text("Email: support@petbuddy.com | Phone: +1 (555) 123-4567", 105, 238, { align: "center" });
+          doc.text("Website: www.petbuddy.com", 105, 246, { align: "center" });
+
+          doc.setFontSize(10).setTextColor(120, 120, 120);
+          doc.text("© 2025 PetBuddy | Thank you for trusting us 🐾", 105, 290, { align: "center" });
+          doc.save("PetBuddy_Bill.pdf");
+        };
+      });
     }
-
-    document.getElementById("downloadBtn").addEventListener("click", () => {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      // Background
-      doc.setFillColor(245, 245, 245);
-      doc.rect(0, 0, 210, 297, "F");
-
-      // Logo + Header
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = "https://cdn-icons-png.flaticon.com/512/616/616408.png";
-
-      img.onload = function () {
-        doc.addImage(img, "PNG", 15, 10, 25, 25);
-        doc.setFontSize(22).setTextColor(0, 51, 102);
-        doc.text("PetBuddy Receipt", 105, 20, { align: "center" });
-
-        doc.setFontSize(12).setTextColor(80, 80, 80);
-        doc.text("Caring for your pets with ❤️", 105, 28, { align: "center" });
-
-        // Customer Section
-        doc.setFillColor(230, 240, 255);
-        doc.roundedRect(15, 40, 180, 40, 3, 3, "F");
-        doc.setFontSize(14).setTextColor(0, 51, 102).text("Customer Details", 20, 48);
-        doc.setFontSize(12).setTextColor(0, 0, 0);
-        doc.text(`Name: ${booking.name}`, 20, 58);
-        doc.text(`Email: ${booking.email}`, 20, 66);
-        doc.text(`Address: ${booking.address || "Not provided"}`, 20, 74);
-
-        // Booking Section
-        doc.setFillColor(240, 255, 240);
-        doc.roundedRect(15, 90, 180, 60, 3, 3, "F");
-        doc.setFontSize(14).setTextColor(0, 51, 102).text("Booking Details", 20, 98);
-        doc.setFontSize(12).setTextColor(0, 0, 0);
-        doc.text(`Service: ${booking.service}`, 20, 108);
-        doc.text(`Date: ${booking.date}`, 20, 116);
-        doc.text(`Notes: ${booking.notes || "None"}`, 20, 124);
-        doc.text(`Payment Method: ${booking.paymentMethod || "Not selected"}`, 20, 132);
-
-        // Total Section
-        doc.setFillColor(255, 245, 230);
-        doc.roundedRect(15, 160, 180, 25, 3, 3, "F");
-        doc.setFontSize(16).setTextColor(153, 51, 0);
-        doc.text(`Total: $${total}`, 105, 176, { align: "center" });
-
-        // Company Contact
-        doc.setFontSize(12).setTextColor(0, 51, 102);
-        doc.text("PetBuddy Contact", 105, 210, { align: "center" });
-        doc.setFontSize(10).setTextColor(0, 0, 0);
-        doc.text("123 Pet Street, HappyTown, USA", 105, 220, { align: "center" });
-        doc.text("Email: support@petbuddy.com | Phone: +1 (555) 123-4567", 105, 228, { align: "center" });
-        doc.text("Website: www.petbuddy.com", 105, 236, { align: "center" });
-
-        // Footer
-        doc.setFontSize(10).setTextColor(120, 120, 120);
-        doc.text("© 2025 PetBuddy | Thank you for trusting us 🐾", 105, 290, { align: "center" });
-
-        doc.save("PetBuddy_Bill.pdf");
-      };
-    });
   </script>
 </body>
 </html>
